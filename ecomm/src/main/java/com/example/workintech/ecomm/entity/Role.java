@@ -9,10 +9,9 @@ import lombok.AllArgsConstructor;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
-import org.yaml.snakeyaml.scanner.ScannerImpl;
 
 @Entity
-@Table(name = "role", schema = "ecommerce")
+@Table(name = "role")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
@@ -35,5 +34,8 @@ public class Role implements GrantedAuthority {
     @Size(max = 50)
     private String code;
 
-    private String authority;
+    @Override
+    public String getAuthority() {
+        return this.code;
+    }
 }

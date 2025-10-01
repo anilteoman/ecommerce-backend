@@ -19,6 +19,7 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.UUID;
 
 @Service
 @RequiredArgsConstructor
@@ -58,22 +59,40 @@ public class UserServiceImpl implements UserService{
         User user = userMapper.toEntity(signupRequest);
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(List.of(role));
+        
+        // Generate verification token
+        String verificationToken = UUID.randomUUID().toString();
+        user.setVerificationToken(verificationToken);
+        user.setIsVerified(false);
+        
         userRepository.save(user);
+        
+        // In a real application, you would send this token via email
+        System.out.println("=== VERIFICATION TOKEN FOR " + user.getEmail() + " ===");
+        System.out.println("Token: " + verificationToken);
+        System.out.println("Verification URL: http://localhost:9000/ecommerce/verify?token=" + verificationToken);
+        System.out.println("================================================");
 
         return new BackendResponse("Please check your email to confirm your signup!");
     }
 
     @Override
     public UserResponse verify(String token) {
-        String email = jwtUtil.extractEmail(token);
+        User user = userRepository.findByVerificationToken(token)
+                .orElseThrow(() -> new TokenNotValidException("Invalid verification token."));
 
-        User user = userRepository.findByEmail(email).orElseThrow(() -> new UserNotFoundException("User not found."));
-
-        if(!jwtUtil.isTokenValid(token)) {
-            throw new TokenNotValidException("Token is not valid or expired.");
+        if (user.getIsVerified()) {
+            throw new TokenNotValidException("User is already verified.");
         }
 
-        return new UserResponse(token, user.getFullName(), user.getEmail(), user.getRoles().get(0).getId());
+        user.setIsVerified(true);
+        user.setVerificationToken(null); // Clear the token after successful verification
+        userRepository.save(user);
+
+        // Generate JWT token for the verified user
+        String jwtToken = jwtUtil.generateToken(user.getEmail());
+        
+        return new UserResponse(jwtToken, user.getFullName(), user.getEmail(), user.getRoles().get(0).getId());
     }
 
     @Override

@@ -28,7 +28,7 @@ public class AuthController {
     }
 
     @GetMapping("/verify")
-    public UserResponse verify(@RequestHeader("Authorization") String token) {
+    public UserResponse verify(@RequestParam("token") String token) {
         return userService.verify(token);
     }
 
