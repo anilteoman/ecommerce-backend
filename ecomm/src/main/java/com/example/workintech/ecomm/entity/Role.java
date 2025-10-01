@@ -11,7 +11,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
 
 @Entity
-@Table(name = "role")
+@Table(name = "role", schema = "ecommerce")
 @NoArgsConstructor
 @AllArgsConstructor
 @Data
