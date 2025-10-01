@@ -25,7 +25,7 @@ FROM eclipse-temurin:17-jre-focal
 # Projenizin tam JAR adını (artifactId ve version) kullanmalısınız:
 # ÖRNEK: ecomm-0.0.1-SNAPSHOT.jar
 # Lütfen bu adı kendi projenizdeki target klasöründen kontrol edin!
-COPY --from=build /app/target/ecomm-0.0.1-SNAPSHOT.jar app.jar
+COPY --from=build /app/target/ecommerce-0.0.1-SNAPSHOT.jar app.jar
 
 # Uygulamanın çalışacağı portu belirtiyoruz.
 EXPOSE 8080
