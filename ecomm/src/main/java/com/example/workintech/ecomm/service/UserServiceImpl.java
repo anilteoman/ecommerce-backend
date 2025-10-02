@@ -60,20 +60,28 @@ public class UserServiceImpl implements UserService{
         user.setPassword(passwordEncoder.encode(user.getPassword()));
         user.setRoles(List.of(role));
         
-        // Generate verification token
-        String verificationToken = UUID.randomUUID().toString();
-        user.setVerificationToken(verificationToken);
-        user.setIsVerified(false);
+        // Auto-verify user for manual testing (no email service)
+        user.setIsVerified(true);
+        user.setVerificationToken(null);
         
         userRepository.save(user);
         
-        // In a real application, you would send this token via email
-        System.out.println("=== VERIFICATION TOKEN FOR " + user.getEmail() + " ===");
-        System.out.println("Token: " + verificationToken);
-        System.out.println("Verification URL: http://localhost:9000/ecommerce/verify?token=" + verificationToken);
-        System.out.println("================================================");
+        // Generate JWT token immediately
+        String jwtToken = jwtUtil.generateToken(user.getEmail());
+        
+        // Display registration success and JWT token in console
+        System.out.println("\n" + "=" .repeat(60));
+        System.out.println("🎉 USER REGISTERED SUCCESSFULLY!");
+        System.out.println("📧 Email: " + user.getEmail());
+        System.out.println("👤 Name: " + user.getFullName());
+        System.out.println("🏷️ Role: " + role.getName());
+        System.out.println("\n🔑 JWT TOKEN FOR AUTHENTICATION:");
+        System.out.println(jwtToken);
+        System.out.println("\n📋 Use this token in Authorization header:");
+        System.out.println("Authorization: Bearer " + jwtToken);
+        System.out.println("=" .repeat(60) + "\n");
 
-        return new BackendResponse("Please check your email to confirm your signup!");
+        return new BackendResponse("User registered successfully! Check console for JWT token.");
     }
 
     @Override
@@ -92,6 +100,17 @@ public class UserServiceImpl implements UserService{
         // Generate JWT token for the verified user
         String jwtToken = jwtUtil.generateToken(user.getEmail());
         
+        // Display verification success and JWT token in console
+        System.out.println("\n" + "=" .repeat(60));
+        System.out.println("✓ USER VERIFIED SUCCESSFULLY!");
+        System.out.println("📧 Email: " + user.getEmail());
+        System.out.println("👤 Name: " + user.getFullName());
+        System.out.println("\n🔑 JWT TOKEN FOR AUTHENTICATION:");
+        System.out.println(jwtToken);
+        System.out.println("\n📋 Use this token in Authorization header:");
+        System.out.println("Authorization: Bearer " + jwtToken);
+        System.out.println("=" .repeat(60) + "\n");
+        
         return new UserResponse(jwtToken, user.getFullName(), user.getEmail(), user.getRoles().get(0).getId());
     }
 
@@ -101,7 +120,25 @@ public class UserServiceImpl implements UserService{
         if(!passwordEncoder.matches(loginRequest.password(), user.getPassword())) {
             throw new InvalidPasswordException("Wrong login information.");
         }
+        
+        // Check if user is verified
+        if (!user.getIsVerified()) {
+            throw new TokenNotValidException("User is not verified. Please verify your account first.");
+        }
+        
         String token = jwtUtil.generateToken(user.getEmail());
+        
+        // Display login success and JWT token in console
+        System.out.println("\n" + "=" .repeat(60));
+        System.out.println("🔓 USER LOGGED IN SUCCESSFULLY!");
+        System.out.println("📧 Email: " + user.getEmail());
+        System.out.println("👤 Name: " + user.getFullName());
+        System.out.println("\n🔑 JWT TOKEN FOR AUTHENTICATION:");
+        System.out.println(token);
+        System.out.println("\n📋 Use this token in Authorization header:");
+        System.out.println("Authorization: Bearer " + token);
+        System.out.println("=" .repeat(60) + "\n");
+        
         return new UserResponse(token, user.getFullName(), user.getEmail(), user.getRoles().get(0).getId());
     }
 }

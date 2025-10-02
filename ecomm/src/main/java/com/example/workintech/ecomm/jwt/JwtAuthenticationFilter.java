@@ -26,14 +26,18 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter{
 
     @Override
     protected void doFilterInternal(HttpServletRequest request, HttpServletResponse response, FilterChain filterChain) throws ServletException, IOException {
-        final String token = request.getHeader("Authorization");
+        final String authHeader = request.getHeader("Authorization");
+        String token = null;
         String username = null;
 
-        if(token != null) {
+        // Check if the header starts with "Bearer "
+        if(authHeader != null && authHeader.startsWith("Bearer ")) {
+            token = authHeader.substring(7); // Remove "Bearer " prefix
             try {
                 username = jwtUtil.extractEmail(token);
+                System.out.println("🔍 JWT Authentication - User: " + username);
             } catch (Exception e) {
-                System.out.println("JWT extraction error: " + e.getMessage());
+                System.out.println("❌ JWT extraction error: " + e.getMessage());
             }
         }
 
